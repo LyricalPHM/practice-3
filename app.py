@@ -7,6 +7,8 @@ from flask import Flask
 
 app = Flask(__name__)
 
+db_initialized = False
+
 
 def get_clickhouse_client(database=None):
     return clickhouse_connect.get_client(
@@ -50,8 +52,18 @@ def init_db():
     raise RuntimeError("ClickHouse is not available")
 
 
+def ensure_db_initialized():
+    global db_initialized
+
+    if not db_initialized:
+        init_db()
+        db_initialized = True
+
+
 @app.route("/")
 def home():
+    ensure_db_initialized()
+
     db_name = os.getenv("CLICKHOUSE_DB", "flaskdb")
     client = get_clickhouse_client(database=db_name)
 
@@ -73,5 +85,5 @@ def health():
 
 
 if __name__ == "__main__":
-    init_db()
+    ensure_db_initialized()
     app.run(host="0.0.0.0", port=5000)
