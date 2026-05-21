@@ -7,15 +7,19 @@ on:
 
 jobs:
   deploy:
-    runs-on: [self-hosted, linux]
+    runs-on: [self-hosted, linux, docker-lab]
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Clean old fixed-name containers
+        run: |
+          docker rm -f flask_app_web flask_app_clickhouse || true
+
       - name: Deploy application with Docker Compose
         run: |
-          docker compose down
+          docker compose down --remove-orphans || true
           docker compose up -d --build
           docker ps
 
@@ -26,7 +30,7 @@ jobs:
 
       - name: Check ClickHouse
         run: |
-          docker exec flask_app_clickhouse clickhouse-client \
+          docker compose exec -T clickhouse clickhouse-client \
             --user flaskuser \
             --password flaskpassword \
             --database flaskdb \
