@@ -1,0 +1,39 @@
+services:
+  web:
+    build: .
+    container_name: flask_app_web
+    ports:
+      - "5000:5000"
+    environment:
+      CLICKHOUSE_HOST: clickhouse
+      CLICKHOUSE_PORT: 8123
+      CLICKHOUSE_DB: flaskdb
+      CLICKHOUSE_USER: flaskuser
+      CLICKHOUSE_PASSWORD: flaskpassword
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    restart: always
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: flask_app_clickhouse
+    environment:
+      CLICKHOUSE_DB: flaskdb
+      CLICKHOUSE_USER: flaskuser
+      CLICKHOUSE_PASSWORD: flaskpassword
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+    healthcheck:
+      test: ["CMD-SHELL", "clickhouse-client --user flaskuser --password flaskpassword --query 'SELECT 1'"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: always
+
+volumes:
+  clickhouse_data:

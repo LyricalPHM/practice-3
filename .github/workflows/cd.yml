@@ -1,0 +1,33 @@
+name: Docker Compose CD with ClickHouse
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, linux, docker-lab]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy application with Docker Compose
+        run: |
+          docker compose down
+          docker compose up -d --build
+          docker ps
+
+      - name: Check application
+        run: |
+          sleep 15
+          curl -f http://localhost:5000
+
+      - name: Check ClickHouse
+        run: |
+          docker exec flask_app_clickhouse clickhouse-client \
+            --user flaskuser \
+            --password flaskpassword \
+            --database flaskdb \
+            --query "SELECT count() FROM visits;"
