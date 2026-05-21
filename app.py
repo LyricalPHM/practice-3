@@ -76,7 +76,7 @@ def home():
     result = client.query("SELECT count() FROM visits")
     visits_count = result.result_rows[0][0]
 
-    return f"Hello, Docker and ClickHouse! Visits count: {visits_count}"
+    return f"Hello, Docker, ClickHouse and GitHub Actions! Visits count: {visits_count}"
 
 
 @app.route("/health")
